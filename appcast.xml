@@ -6,6 +6,25 @@
         <description>Mika+Grid update feed</description>
         <language>en</language>
         <item>
+            <title>Version 1.1.0</title>
+            <description><![CDATA[
+                <h2>Mika+Grid 1.1.0</h2>
+                <ul>
+                    <li>Sparkle auto-update integration</li>
+                    <li>"Check for Updates" in popover and preferences</li>
+                    <li>Automatic update toggle in General preferences</li>
+                </ul>
+            ]]></description>
+            <pubDate>Wed, 19 Mar 2026 14:00:00 +0100</pubDate>
+            <sparkle:version>1.1.0</sparkle:version>
+            <sparkle:shortVersionString>1.1.0</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <enclosure url="https://github.com/Mukaarts/MikaGrid/releases/download/v1.1.0/Mika%2BGrid-v1.1.0.dmg"
+                       sparkle:edSignature="MY61XGFqYk+m3zUi5CnuOSFmZyhLWstRvxfddO50kp3QBi3i+KZPDiXXsemc0+8Ym/bBj7vedjEgwzQINRgCCA=="
+                       length="2531425"
+                       type="application/octet-stream" />
+        </item>
+        <item>
             <title>Version 1.0.0</title>
             <description><![CDATA[
                 <h2>Mika+Grid 1.0.0</h2>
