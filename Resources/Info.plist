@@ -15,7 +15,7 @@
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.0.0</string>
+    <string>1.1.0</string>
     <key>CFBundleVersion</key>
     <string>1</string>
     <key>LSMinimumSystemVersion</key>
@@ -24,5 +24,9 @@
     <true/>
     <key>NSHighResolutionCapable</key>
     <true/>
+    <key>SUFeedURL</key>
+    <string>https://raw.githubusercontent.com/Mukaarts/MikaGrid/main/appcast.xml</string>
+    <key>SUPublicEDKey</key>
+    <string>eauiHgP4PM9ynLekAmo3URrX3ye3HW7D53xOZa5AeYI=</string>
 </dict>
 </plist>

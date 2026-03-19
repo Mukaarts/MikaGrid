@@ -139,8 +139,8 @@ struct PopoverGridView: View {
 
             Spacer()
 
-            Button("About") {
-                NotificationCenter.default.post(name: .showAbout, object: nil)
+            Button("Updates") {
+                appState.sparkleUpdater.checkForUpdates()
             }
             .buttonStyle(.plain)
             .font(.system(size: 11))

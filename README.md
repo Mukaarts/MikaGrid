@@ -1,4 +1,4 @@
-# Mika+Grid v1.0.0
+# Mika+Grid v1.1.0
 
 A lightweight macOS menubar window manager that snaps windows to predefined layouts using keyboard shortcuts or a visual grid — similar to Rectangle, built natively with Swift and SwiftUI. Part of the Mika+ ecosystem.
 
@@ -15,6 +15,7 @@ A lightweight macOS menubar window manager that snaps windows to predefined layo
 - **Preferences Window** — 3-tab settings (General, Shortcuts, About)
 - **Shortcut Recorder** — inline hotkey recorder with conflict detection
 - **Launch at Login** — via SMAppService (macOS 13+)
+- **Sparkle Auto-Update** — automatic update checks with EdDSA signature verification
 - **Mika+ Branding** — dark theme with teal accent colors
 
 ## Keyboard Shortcuts

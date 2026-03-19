@@ -49,6 +49,30 @@ struct GeneralTabView: View {
                 .padding(4)
             }
 
+            GroupBox("Updates") {
+                VStack(alignment: .leading, spacing: 12) {
+                    Toggle("Automatic updates", isOn: Binding(
+                        get: { appState.sparkleUpdater.automaticallyChecksForUpdates },
+                        set: { appState.sparkleUpdater.automaticallyChecksForUpdates = $0 }
+                    ))
+
+                    Divider()
+
+                    HStack {
+                        if let lastCheck = appState.sparkleUpdater.lastUpdateCheckDate {
+                            Text("Last checked: \(lastCheck, style: .relative) ago")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        Button("Check Now") {
+                            appState.sparkleUpdater.checkForUpdates()
+                        }
+                    }
+                }
+                .padding(4)
+            }
+
             Spacer()
         }
         .onAppear {

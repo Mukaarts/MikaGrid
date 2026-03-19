@@ -45,6 +45,31 @@ for img in MenubarIconTemplate.png MenubarIconTemplate@2x.png; do
     fi
 done
 
+# Embed Sparkle.framework if available
+SPARKLE_FW=$(find "$PROJECT_DIR/.build/artifacts" -path "*/macos-arm64_x86_64/Sparkle.framework" -print -quit 2>/dev/null || true)
+if [ -z "$SPARKLE_FW" ]; then
+    SPARKLE_FW=$(find "$PROJECT_DIR/.build/artifacts" -name "Sparkle.framework" -print -quit 2>/dev/null || true)
+fi
+if [ -n "$SPARKLE_FW" ]; then
+    echo "==> Embedding Sparkle.framework..."
+    mkdir -p "$APP_BUNDLE/Contents/Frameworks"
+    cp -R "$SPARKLE_FW" "$APP_BUNDLE/Contents/Frameworks/"
+
+    install_name_tool -add_rpath "@executable_path/../Frameworks" \
+        "$APP_BUNDLE/Contents/MacOS/MikaGrid" 2>/dev/null || true
+
+    # Sign nested Sparkle components inside-out
+    SPARKLE_DIR="$APP_BUNDLE/Contents/Frameworks/Sparkle.framework"
+    for xpc in "$SPARKLE_DIR"/Versions/B/XPCServices/*.xpc; do
+        [ -d "$xpc" ] && codesign --force --sign - --options runtime "$xpc"
+    done
+    for app in "$SPARKLE_DIR"/Versions/B/*.app; do
+        [ -d "$app" ] && codesign --force --sign - --options runtime "$app"
+    done
+    codesign --force --sign - --options runtime "$SPARKLE_DIR/Versions/B/Autoupdate" 2>/dev/null || true
+    codesign --force --sign - --options runtime "$SPARKLE_DIR"
+fi
+
 echo "==> Signing with hardened runtime..."
 codesign --force --sign - \
     --entitlements "$PROJECT_DIR/Resources/MikaGrid.entitlements" \

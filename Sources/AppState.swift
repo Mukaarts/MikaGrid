@@ -13,6 +13,7 @@ final class AppState {
     let launchAtLoginManager = LaunchAtLoginManager()
     let accessibilityManager = AccessibilityManager()
     let snapHistory = SnapHistory()
+    let sparkleUpdater = SparkleUpdater()
 
     var windowManager: WindowManager?
     var hotkeyManager: HotkeyManager?

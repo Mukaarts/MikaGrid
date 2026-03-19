@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.1.0] - 2026-03-19
+
+### Added
+- **Sparkle Auto-Update** — integrated Sparkle 2.6+ for automatic update checks via menubar and preferences
+- **Check for Updates** — "Updates" button in popover footer and "Check Now" in General preferences
+- **Automatic Updates Toggle** — configurable in Preferences > General
+- **appcast.xml** — GitHub-hosted update feed with EdDSA signature verification
+- **Sparkle Framework Embedding** — build script embeds and signs Sparkle.framework with nested components
+
+### Changed
+- Package.swift: added Sparkle dependency
+- Info.plist: added `SUFeedURL` and `SUPublicEDKey` for Sparkle
+- Build script: embeds Sparkle.framework with inside-out codesigning
+- Popover footer: "About" replaced with "Updates" button
+
 ## [1.0.0] - 2026-03-19
 
 ### Added

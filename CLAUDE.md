@@ -19,7 +19,8 @@ MikaGrid/
 ├── CLAUDE.md                        ← you are here
 ├── README.md
 ├── CHANGELOG.md
-├── Package.swift                    ← SPM config (macOS 14+, Carbon, ApplicationServices)
+├── Package.swift                    ← SPM config (macOS 14+, Carbon, ApplicationServices, Sparkle)
+├── appcast.xml                      ← Sparkle update feed (GitHub-hosted)
 ├── .gitignore
 ├── build.sh                         → exec scripts/build.sh
 ├── Resources/
@@ -40,6 +41,9 @@ MikaGrid/
 │   ├── SnapAction.swift             ← 11 snap actions + geometry + default bindings
 │   ├── SnapHistory.swift            ← Previous positions for restore
 │   ├── AccessibilityManager.swift   ← Permission check/request/polling
+│   │
+│   ├── # Auto-Update
+│   ├── SparkleUpdater.swift         ← Sparkle wrapper (SPUStandardUpdaterController)
 │   │
 │   ├── # Global Hotkeys
 │   ├── HotkeyManager.swift          ← Carbon RegisterEventHotKey (sig: "MKGD")
