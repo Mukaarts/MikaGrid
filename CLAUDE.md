@@ -3,140 +3,123 @@
 ## What is this?
 A native macOS Menu Bar app built with Swift + SwiftUI.
 It snaps windows to predefined layouts using the macOS Accessibility API — similar to Rectangle.
-The app lives exclusively in the menu bar (no Dock icon).
+The app lives exclusively in the menu bar (no Dock icon). Part of the Mika+ ecosystem.
 
 ## App Identity
 - **Name**: Mika+Grid
 - **Bundle ID**: lu.daumedia.mikagrid
-- **Min macOS**: 13.0 (Ventura) — required for `MenuBarExtra`
-- **Language**: Swift 5.9+, SwiftUI
-- **Architecture**: arm64 + x86_64 (Universal)
+- **Min macOS**: 14.0 (Sonoma)
+- **Language**: Swift 6.0, SwiftUI
+- **Build System**: Swift Package Manager
+- **Architecture**: arm64 (Apple Silicon)
 
 ## Project Structure
 ```
 MikaGrid/
 ├── CLAUDE.md                        ← you are here
-├── MikaGrid.xcodeproj/
-│   └── project.pbxproj
-└── MikaGrid/
-    ├── MikaGridApp.swift            ← @main, MenuBarExtra scene
-    ├── AppState.swift               ← ObservableObject, shared state
-    ├── AppMenuView.swift            ← Popover UI
-    ├── SettingsView.swift           ← Settings window (3 tabs)
-    ├── GlobalShortcutMonitor.swift  ← NSEvent global key monitor
-    ├── WindowSnapEngine.swift       ← Accessibility API window mover
-    ├── Info.plist
-    └── Assets.xcassets/
-        └── AppIcon.appiconset/      ← already populated
+├── README.md
+├── CHANGELOG.md
+├── Package.swift                    ← SPM config (macOS 14+, Carbon, ApplicationServices)
+├── .gitignore
+├── build.sh                         → exec scripts/build.sh
+├── Resources/
+│   ├── Info.plist                   ← LSUIElement=true, Bundle ID
+│   ├── MikaGrid.entitlements        ← No sandbox
+│   ├── AppIcon.png                  ← 1024x1024 source icon
+│   └── AppIcon.icns                 ← macOS icon set
+├── Sources/
+│   ├── MikaGridApp.swift            ← @main, MenuBarExtra + AppDelegate
+│   ├── AppState.swift               ← @Observable central state
+│   ├── AppPreferences.swift         ← UserDefaults-backed preferences
+│   ├── MikaPlusColors.swift         ← Brand colors (shared with MikaScreenSnap)
+│   ├── LaunchAtLoginManager.swift   ← SMAppService wrapper
+│   ├── AboutWindow.swift            ← About window with Mika+ branding
+│   │
+│   ├── # Window Management Core
+│   ├── WindowManager.swift          ← AXUIElement window manipulation
+│   ├── SnapAction.swift             ← 11 snap actions + geometry + default bindings
+│   ├── SnapHistory.swift            ← Previous positions for restore
+│   ├── AccessibilityManager.swift   ← Permission check/request/polling
+│   │
+│   ├── # Global Hotkeys
+│   ├── HotkeyManager.swift          ← Carbon RegisterEventHotKey (sig: "MKGD")
+│   │
+│   ├── # Menu Bar UI
+│   ├── PopoverGridView.swift        ← Visual snap grid popover
+│   ├── SnapZoneButton.swift         ← Clickable zone with monitor preview
+│   │
+│   ├── # Settings
+│   ├── Preferences/
+│   │   ├── PreferencesStyles.swift          ← Tab enum
+│   │   ├── PreferencesWindowController.swift
+│   │   ├── PreferencesContainerView.swift   ← NavigationSplitView
+│   │   ├── GeneralTabView.swift             ← Launch at Login, animations
+│   │   ├── ShortcutsTabView.swift           ← Inline recorder + conflict detection
+│   │   └── AboutTabView.swift               ← Version, reset, onboarding
+│   │
+│   └── # Onboarding
+│       └── Onboarding/
+│           ├── OnboardingWindowController.swift
+│           ├── OnboardingView.swift         ← Paged container
+│           ├── WelcomeScreen.swift          ← "Snap. Organize. Focus."
+│           ├── PermissionScreen.swift       ← Accessibility + auto-polling
+│           └── ShortcutsScreen.swift        ← Shortcuts overview
+│
+└── scripts/
+    ├── build.sh                     ← Build + app bundle + codesign
+    ├── create-dmg.sh                ← DMG with create-dmg (brew)
+    ├── create-dmg-simple.sh         ← DMG with hdiutil only
+    └── GenerateDMGBackground.swift  ← Branded DMG background
 ```
 
-## Features to implement
+## Snap Actions & Default Shortcuts
 
-### 1. Menu Bar Popover (`AppMenuView.swift`)
-- App header with icon + name + green status dot
-- Quick Note text field (persisted via AppStorage)
-- Snap action buttons: Left, Right, Top, Bottom, Maximize, Center
-- Recent snaps history (last 3)
-- Footer: Settings | Reload | Quit
+| Shortcut | Action | Key Code |
+|----------|--------|----------|
+| ⌃⌥← | Left Half | 0x7B |
+| ⌃⌥→ | Right Half | 0x7C |
+| ⌃⌥↑ | Top Half | 0x7E |
+| ⌃⌥↓ | Bottom Half | 0x7D |
+| ⌃⌥U | Top Left | 0x20 |
+| ⌃⌥I | Top Right | 0x22 |
+| ⌃⌥J | Bottom Left | 0x26 |
+| ⌃⌥K | Bottom Right | 0x28 |
+| ⌃⌥↩ | Maximize | 0x24 |
+| ⌃⌥C | Center (2/3) | 0x08 |
+| ⌃⌥⌫ | Restore | 0x33 |
 
-### 2. Window Snapping (`WindowSnapEngine.swift`)
-Use `AXUIElement` Accessibility API to move the frontmost window.
-Supported layouts:
-| Key | Layout |
-|-----|--------|
-| left | Left half |
-| right | Right half |
-| top | Top half |
-| bottom | Bottom half |
-| maximize | Full screen |
-| center | 2/3 centered |
-| topleft | Top-left quarter |
-| topright | Top-right quarter |
-| bottomleft | Bottom-left quarter |
-| bottomright | Bottom-right quarter |
-| first3rd | First third |
-| center3rd | Center third |
-| last3rd | Last third |
-| first23rd | First two thirds |
-| last23rd | Last two thirds |
+## Architecture
 
-Use `NSScreen.main?.visibleFrame` (excludes menu bar + Dock).
-Convert NSScreen coords (bottom-left origin) → AX coords (top-left origin).
-
-### 3. Global Shortcuts (`GlobalShortcutMonitor.swift`)
-Use `NSEvent.addGlobalMonitorForEvents(matching: .keyDown)`.
-
-| Shortcut | Action |
-|----------|--------|
-| ⌃← | left |
-| ⌃→ | right |
-| ⌃↑ | top |
-| ⌃↓ | bottom |
-| ⌃⇧↑ | maximize |
-| ⌃C | center |
-| ⌃⇧Q | topleft |
-| ⌃⇧E | topright |
-| ⌃⇧A | bottomleft |
-| ⌃⇧D | bottomright |
-
-### 4. Settings (`SettingsView.swift`)
-Three tabs:
-- **General**: Launch at Login (`SMAppService`), Show in Dock toggle, Clear History
-- **Shortcuts**: Read-only list of all key bindings
-- **Appearance**: Accent color picker (6 colors)
-
-### 5. AppState (`AppState.swift`)
-```swift
-@AppStorage("accentColorIndex") var accentColorIndex: Int = 0
-@AppStorage("launchAtLogin") var launchAtLogin: Bool = false
-@AppStorage("showInDock") var showInDock: Bool = false
-@AppStorage("quickNote") var quickNote: String = ""
-@Published var history: [SnapEntry] = []
-```
+- **AppState** — `@Observable @MainActor` central state holding all managers
+- **WindowManager** — uses `AXUIElementCreateApplication()` + `kAXFocusedWindowAttribute` to get/set window position and size
+- **Coordinate Conversion** — `axY = mainScreenHeight - cocoaY - windowHeight` (AX=top-left, NSScreen=bottom-left)
+- **HotkeyManager** — Carbon `InstallEventHandler` + `RegisterEventHotKey` with `nonisolated(unsafe) static var instance` for callback bridge
+- **Communication** — `NotificationCenter` posts `.showPreferences` / `.showAbout` from popover to AppDelegate
 
 ## Permissions Required
-- **Accessibility**: `AXIsProcessTrusted()` — prompt user on first launch
-- **NO App Sandbox** — required for Accessibility + global key monitor
+- **Accessibility**: `AXIsProcessTrusted()` — prompted during onboarding
+- **NO App Sandbox** — required for AXUIElement + global hotkeys
 - `LSUIElement = true` in Info.plist — hides from Dock
 
-## Communication between components
-Use `DistributedNotificationCenter` with name `com.daumedia.snap`:
-```swift
-// Post (from menu or shortcut monitor):
-DistributedNotificationCenter.default().postNotificationName(
-    Notification.Name("com.daumedia.snap"),
-    object: "left",
-    userInfo: nil,
-    deliverImmediately: true
-)
-
-// Listen (in WindowSnapEngine):
-DistributedNotificationCenter.default().addObserver(
-    forName: Notification.Name("com.daumedia.snap"), ...
-)
-```
-
-## Design Guidelines
-- Follow macOS HIG
-- Use `Color.accentColor` for interactive elements
-- Menu popover width: 280pt
-- Use SF Symbols for icons
-- Dark mode compatible
+## Shared Patterns with MikaScreenSnap
+- `MikaPlusColors.swift` — identical brand color palette
+- `HotkeyManager.swift` — same Carbon pattern, different signature ("MKGD" vs "MSNS")
+- `LaunchAtLoginManager.swift` — identical SMAppService wrapper
+- `PreferencesWindowController.swift` — same NSWindow + NSHostingView pattern
+- `OnboardingWindowController.swift` — same window controller pattern
+- `AboutWindowController.swift` — same pattern with Mika+Grid branding
+- `build.sh` / DMG scripts — adapted from MikaScreenSnap (without Sparkle)
 
 ## Build & Run
 ```bash
-open MikaGrid.xcodeproj
-# Then ⌘R in Xcode
+swift build              # Debug build
+swift build -c release   # Release build
+bash build.sh            # Build + app bundle + codesign
+open build/Mika+Grid.app # Launch
 ```
 
-On first launch:
-1. App appears in menu bar
-2. Prompts for Accessibility permission
-3. System Settings → Privacy & Security → Accessibility → enable Mika+Grid
-
-## What Claude Code should do
-1. Generate `MikaGrid.xcodeproj/project.pbxproj` (valid Xcode project file)
-2. Implement all `.swift` files listed above
-3. Ensure the app compiles and runs on macOS 13+
-4. Add proper error handling for Accessibility permission denial
-5. Test that window snapping works for common apps (Safari, Terminal, Finder)
+## Create DMG Installer
+```bash
+bash scripts/create-dmg-simple.sh   # No dependencies
+bash scripts/create-dmg.sh          # Requires: brew install create-dmg
+```
