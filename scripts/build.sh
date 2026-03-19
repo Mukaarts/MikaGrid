@@ -67,11 +67,13 @@ if [ -n "$SPARKLE_FW" ]; then
         [ -d "$app" ] && codesign --force --sign - --options runtime "$app"
     done
     codesign --force --sign - --options runtime "$SPARKLE_DIR/Versions/B/Autoupdate" 2>/dev/null || true
+    # Sign the Sparkle dylib itself
+    codesign --force --sign - --options runtime "$SPARKLE_DIR/Versions/B/Sparkle"
     codesign --force --sign - --options runtime "$SPARKLE_DIR"
 fi
 
 echo "==> Signing with hardened runtime..."
-codesign --force --sign - \
+codesign --force --deep --sign - \
     --entitlements "$PROJECT_DIR/Resources/MikaGrid.entitlements" \
     --options runtime \
     "$APP_BUNDLE"
