@@ -1,0 +1,64 @@
+#!/bin/bash
+set -euo pipefail
+
+PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+BUILD_DIR="$PROJECT_DIR/build"
+APP_NAME="Mika+Grid"
+APP_BUNDLE="$BUILD_DIR/$APP_NAME.app"
+
+# Parse flags
+CLEAN=false
+for arg in "$@"; do
+    case "$arg" in
+        --clean) CLEAN=true ;;
+    esac
+done
+
+if [ "$CLEAN" = true ]; then
+    echo "==> Cleaning .build/ directory..."
+    rm -rf "$PROJECT_DIR/.build"
+fi
+
+echo "==> Building MikaGrid..."
+cd "$PROJECT_DIR"
+swift build -c release 2>&1
+
+EXECUTABLE=$(swift build -c release --show-bin-path)/MikaGrid
+
+echo "==> Assembling app bundle..."
+rm -rf "$APP_BUNDLE"
+mkdir -p "$APP_BUNDLE/Contents/MacOS"
+mkdir -p "$APP_BUNDLE/Contents/Resources"
+
+cp "$EXECUTABLE" "$APP_BUNDLE/Contents/MacOS/MikaGrid"
+cp "$PROJECT_DIR/Resources/Info.plist" "$APP_BUNDLE/Contents/Info.plist"
+
+# Copy app icon if available
+if [ -f "$PROJECT_DIR/Resources/AppIcon.icns" ]; then
+    cp "$PROJECT_DIR/Resources/AppIcon.icns" "$APP_BUNDLE/Contents/Resources/AppIcon.icns"
+fi
+
+# Copy menubar icon if available
+for img in MenubarIconTemplate.png MenubarIconTemplate@2x.png; do
+    if [ -f "$PROJECT_DIR/Resources/$img" ]; then
+        cp "$PROJECT_DIR/Resources/$img" "$APP_BUNDLE/Contents/Resources/$img"
+    fi
+done
+
+echo "==> Signing with hardened runtime..."
+codesign --force --sign - \
+    --entitlements "$PROJECT_DIR/Resources/MikaGrid.entitlements" \
+    --options runtime \
+    "$APP_BUNDLE"
+
+# Read version from Info.plist
+VERSION=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$APP_BUNDLE/Contents/Info.plist" 2>/dev/null || echo "1.0")
+
+echo ""
+echo "==> Build complete: $APP_BUNDLE (v$VERSION)"
+echo ""
+echo "To verify signature:"
+echo "  codesign --verify --deep --strict \"$APP_BUNDLE\""
+echo ""
+echo "To run:"
+echo "  open \"$APP_BUNDLE\""
